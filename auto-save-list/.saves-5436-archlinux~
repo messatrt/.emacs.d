@@ -1,3 +1,5 @@
+/home/essa/.emacs.d/.gitignore
+/home/essa/.emacs.d/#.gitignore#
 /home/essa/.emacs.d/init.el
 /home/essa/.emacs.d/#init.el#
 /home/essa/.emacs.d/custom.el
