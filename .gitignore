@@ -1,3 +1,5 @@
-backup/
+backups/
 elpa/
 eln-cache/
+snippets/
+auto-save-list/
