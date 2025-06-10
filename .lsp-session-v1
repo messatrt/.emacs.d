@@ -1,0 +1,1 @@
+#s(lsp-session ("/home/essa/code/test/src" "/home/essa/code/etc") nil #s(hash-table test equal) #s(hash-table test equal) #s(hash-table test equal))

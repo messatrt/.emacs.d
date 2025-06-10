@@ -1,0 +1,42 @@
+const std = @import("std");
+
+pub fn main() !void {
+    const stdout = std.io.getStdOut().writer();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+
+    try printTree(std.fs.cwd(), ".", 0, allocator, stdout);
+}
+
+fn printTree(
+    dir: std.fs.Dir,
+    path: []const u8,
+    d: usize,
+    allocator: std.mem.Allocator,
+    writer: anytype,
+) !void {
+    const sub_dir = try dir.openDir(path, .{ .iterate = true });
+    var it = sub_dir.iterate();
+    var depth = d;
+    while (try it.next()) |entry| {
+        const intent = " " ** depth;
+        const indent = try std.fmt.allocPrint(allocator, "{s}", .{intent});
+        defer allocator.free(indent);
+
+        switch (entry.kind) {
+            .directory => {
+                try writer.print("{s}📁 {s}/\n", .{ indent, entry.name });
+                const sub_path = try std.fs.path.join(allocator, &[_][]const u8{ path, entry.name });
+                defer allocator.free(sub_path);
+
+                try printTree(dir, sub_path, depth + 1, allocator, writer);
+            },
+            .file => {
+                try writer.print("{s}📄 {s}\n", .{ indent, entry.name });
+            },
+            else => {
+                try writer.print("{s}❓ {s}\n", .{ indent, entry.name });
+            },
+        }
+    }
+}

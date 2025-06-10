@@ -1,3 +1,4 @@
+;; Backup directory
 (add-to-list 'backup-directory-alist
              (cons "." "~/.emacs.d/backups/"))
 
@@ -12,12 +13,11 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-;; Enable relative line numbers globally
+;; Relative line numbers globally
 (global-display-line-numbers-mode 1)
 (setq display-line-numbers-type 'relative)
 
-
-;; Font settings
+;; Font
 (set-face-attribute 'default nil :font "FiraCode Nerd Font" :height 100)
 
 ;; Disable bell
@@ -28,7 +28,7 @@
 (setq package-archives
       '(("melpa" . "https://melpa.org/packages/")
         ("elpa" . "https://elpa.gnu.org/packages/")
-        ("org" . "https://orgmode.org/elpa/")
+        ("org" . "https://orgmode.org/elpa/") ;; okay to keep org repo, harmless
         ("gnu-devel" . "https://elpa.gnu.org/devel/")))
 (package-initialize)
 
@@ -37,109 +37,91 @@
 
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
+
 (require 'use-package)
 (setq use-package-always-ensure t)
-
-;; Theme
-(use-package doom-themes
-  :config
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
-  (load-theme 'doom-tokyo-night t)
-  (doom-themes-visual-bell-config)
-  (setq doom-themes-treemacs-theme "doom-atom")
-  (doom-themes-treemacs-config)
-  (doom-themes-org-config))
 
 ;; Modeline
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
   :custom ((doom-modeline-height 15)))
 
-;; Ivy completion
-(use-package ivy
-  :init (ivy-mode 1))
-
 ;; Rust
 (use-package rust-mode
-  :ensure t
   :config
   (setq rust-format-on-save t))
 
-;; Shell path sync on macOS
+;; Zig
+(use-package zig-mode
+  :mode ("\\.zig\\'" . zig-mode))
+
+;; VTerm
+(use-package vterm)
+
+;; Shell path on macOS
 (use-package exec-path-from-shell
   :config
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
 
-;; Zig support
-(use-package zig-mode
-  :ensure t
-  :mode ("\\.zig\\'" . zig-mode))
-
-;; VTerm
-(use-package vterm
-  :ensure t)
-
-(dolist (mode '(org-mode-hook
-                vterm-mode-hook
+;; Disable line numbers in some modes
+(dolist (mode '(vterm-mode-hook
                 dired-mode-hook
                 eshell-mode-hook
                 term-mode-hook
+		org-mode-hook
                 shell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
+;; Escape key to quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-(defun efs/org-mode-setup ()
-  (org-indent-mode)
-  (variable-pitch-mode 1)
-  (visual-line-mode 1))
+;; Theme setup
+;; (use-package autothemer)
 
-;; Org Mode Configuration ------------------------------------------------------
+;; (mapc #'disable-theme custom-enabled-themes)
 
-(defun efs/org-font-setup ()
-  ;; Replace list hyphen with dot
-  (font-lock-add-keywords 'org-mode
-                          '(("^ *\\([-]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+;; (use-package rose-pine-theme
+;;   :load-path "~/.emacs.d/lisp"
+;;   :config
+;;   (load-theme 'rose-pine t))
 
-  ;; Set faces for heading levels
-  (dolist (face '((org-level-1 . 1.2)
-                  (org-level-2 . 1.1)
-                  (org-level-3 . 1.05)
-                  (org-level-4 . 1.0)
-                  (org-level-5 . 1.1)
-                  (org-level-6 . 1.1)
-                  (org-level-7 . 1.1)
-                  (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :font "JetBrainsMono Nerd Font" :weight 'regular :height (cdr face)))
+;; ;;Company mode for auto-completion
+;; (use-package company
+;;   :ensure t
+;;   :hook (after-init . global-company-mode)
+;;   :config
+;;   (setq company-idle-delay 0.2
+;;         company-minimum-prefix-length 1))
 
-  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+;; ;; Eglot for LSP support
+;; (use-package eglot
+;;   :ensure t
+;;   :hook ((prog-mode . eglot-ensure))
+;;   :config
+;;   (add-to-list 'eglot-server-programs
+;;                '(zig-mode . ("zls")))) ;; example with Rust
 
-(use-package org
-  :hook (org-mode . efs/org-mode-setup)
+;; (use-package yasnippet
+;;   :hook (prog-mode . yas-minor-mode)
+;;   :config
+;;   (yas-reload-all))
+
+;; (use-package yasnippet-snippets
+;;   :after yasnippet)
+
+;; ;; Optional: use company with yasnippet
+;; (defun company-backend-with-yas (backend)
+;;   "Add :with company-yasnippet to a BACKEND."
+;;   (if (and (listp backend) (member 'company-yasnippet backend))
+;;       backend
+;;     (append (if (consp backend) backend (list backend))
+;;             '(:with company-yasnippet))))
+
+(use-package ivy
+  :ensure t
   :config
-  (setq org-ellipsis " ▾")
-  (efs/org-font-setup))
+  (ivy-mode 1))
 
-(use-package org-bullets
-  :after org
-  :hook (org-mode . org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
-(defun efs/org-mode-visual-fill ()
-  (setq visual-fill-column-width 100
-        visual-fill-column-center-text t)
-  (visual-fill-column-mode 1))
-
-(use-package visual-fill-column
-  :hook (org-mode . efs/org-mode-visual-fill))
+(load-theme 'doom-tokyo-night)
